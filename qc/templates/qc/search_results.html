@@ -1,0 +1,35 @@
+{% extends "qc/base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Sample Search</h2>
+  <form method="get" action="{% url 'sample_search' %}" style="display:flex;gap:8px;max-width:420px;margin-bottom:4px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Sample ID, project, batch, or mixer..."
+           style="flex:1;padding:7px 10px;border:1px solid var(--grid-line);border-radius:6px;" autofocus>
+    <button type="submit">Search</button>
+  </form>
+</div>
+
+{% if query %}
+<div class="card">
+  <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">
+    {{ results|length }} result{{ results|length|pluralize }} for "{{ query }}"
+  </div>
+  <table class="grid">
+    <thead><tr>
+      <th>Sample ID</th><th>Project</th><th>Batch</th><th>Mixer</th><th>Casting Date</th><th>Grade</th><th>Registered By</th>
+    </tr></thead>
+    <tbody>
+      {% for s in results %}
+      <tr>
+        <td>{{ s.sample_id }}</td><td>{{ s.project_name }}</td><td>{{ s.batch_no }}</td>
+        <td>{{ s.mixer_id }}</td><td>{{ s.casting_date }}</td><td>{{ s.concrete_grade }}</td>
+        <td>{{ s.registered_by.username }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">No samples match "{{ query }}".</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

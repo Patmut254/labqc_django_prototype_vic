@@ -1,0 +1,106 @@
+{% extends "qc/base.html" %}
+{% block content %}
+
+<div class="card" style="padding:14px 18px;margin-bottom:18px;">
+  <div style="font-size:15px;font-weight:600;">Welcome, {{ user.get_full_name|default:user.username }}</div>
+  <div style="font-size:12.5px;color:var(--text-muted);">Role: {{ user.profile.get_role_display|default:"—" }}</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Samples</div>
+    <div class="kpi-value">{{ total_samples }}</div>
+    <div class="kpi-sub">Registered to date</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Slump Tests</div>
+    <div class="kpi-value">{{ total_slump }}</div>
+    {% if slump_nonconforming %}
+      <div class="kpi-sub warn">{{ slump_nonconforming }} non-conforming</div>
+    {% else %}
+      <div class="kpi-sub good">All within limit</div>
+    {% endif %}
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Strength Tests</div>
+    <div class="kpi-value">{{ total_strength }}</div>
+    <div class="kpi-sub">Across all curing ages</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">28-Day Pass Rate</div>
+    {% if pass_rate is not None %}
+      <div class="kpi-value">{{ pass_rate }}%</div>
+      <div class="kpi-sub">{{ strength_checked }} results checked</div>
+    {% else %}
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">No 28-day results yet</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="split-row">
+  <div class="card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:14px;">Sample Registration Trend</div>
+    {% if chart_bars %}
+      <div class="bar-chart">
+        {% for b in chart_bars %}
+          <div class="bar-col">
+            <div class="bar-count">{{ b.count }}</div>
+            <div class="bar" style="height:{{ b.pct }}%;"></div>
+            <div class="bar-label">{{ b.label }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="font-size:13px;color:var(--text-muted);">No samples registered yet — this chart fills in as batches are logged.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Samples by Concrete Grade</div>
+    {% if grade_ranking %}
+      <ul class="rank-list">
+        {% for g in grade_ranking %}
+          <li>
+            <span class="rank-badge">{{ forloop.counter }}</span>
+            <span class="rank-label">{{ g.label }}</span>
+            <span class="rank-count">{{ g.count }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p style="font-size:13px;color:var(--text-muted);">No samples registered yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  {% if user.is_superuser %}
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Quick actions</div>
+    <ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.9;">
+      <li><a href="/admin/auth/user/add/">Add a new user</a></li>
+      <li><a href="/admin/qc/profile/">Manage user roles</a></li>
+      <li><a href="{% url 'registration' %}">Register a new sample</a></li>
+      <li><a href="{% url 'reporting' %}">View compliance summary and charts</a></li>
+    </ul>
+  {% elif role == "lab_technician" %}
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Quick actions</div>
+    <ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.9;">
+      <li><a href="{% url 'registration' %}">Register a new sample</a></li>
+      <li><a href="{% url 'slump_test' %}">Enter a slump test result</a></li>
+      <li><a href="{% url 'curing_strength' %}">Enter a curing/strength result</a></li>
+    </ul>
+  {% elif role == "site_engineer" %}
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Quick actions</div>
+    <ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.9;">
+      <li><a href="{% url 'reporting' %}">Search results and view non-conformance log</a></li>
+    </ul>
+  {% elif role == "project_manager" %}
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Quick actions</div>
+    <ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.9;">
+      <li><a href="{% url 'reporting' %}">View compliance summary and charts</a></li>
+    </ul>
+  {% endif %}
+</div>
+
+{% endblock %}

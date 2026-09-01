@@ -1,0 +1,111 @@
+{% extends "qc/base.html" %}
+{% load static %}
+{% block content %}
+<div class="kpi-row">
+  <div class="kpi-card"><div class="kpi-value">{{ total_samples }}</div><div class="kpi-label">Samples Registered</div></div>
+  <div class="kpi-card"><div class="kpi-value">{{ total_slump }}</div><div class="kpi-label">Slump Tests</div></div>
+  <div class="kpi-card"><div class="kpi-value">{{ slump_nonconforming_count }}</div><div class="kpi-label">Slump Non-Conforming</div></div>
+  <div class="kpi-card"><div class="kpi-value">{{ total_strength }}</div><div class="kpi-label">Strength Tests</div></div>
+  <div class="kpi-card"><div class="kpi-value">{{ strength_passed_count }}</div><div class="kpi-label">28-day Passed</div></div>
+  <div class="kpi-card"><div class="kpi-value">{{ strength_failed_count }}</div><div class="kpi-label">28-day Failed</div></div>
+</div>
+
+<div class="card">
+  <h2>Figure 6.1 — Recorded Slump Results Against Acceptance Limits</h2>
+  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">All twenty registered samples, actual slump vs. the grade's acceptance limit.</p>
+  <canvas id="slumpChart" height="90"></canvas>
+</div>
+
+<div class="split-row">
+  <div class="card">
+    <h2>Figure 6.2 — Compressive Strength Development</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Six samples across the full 7/14/21/28-day curing cycle.</p>
+    <canvas id="curingChart" height="140"></canvas>
+  </div>
+  <div class="card">
+    <h2>Figure 6.3 — Test Outcome Distribution</h2>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">All recorded curing &amp; strength results.</p>
+    <canvas id="outcomeChart" height="140"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Figure 6.4 — Non-Conformance Comparison</h2>
+  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Slump test vs. 28-day compressive strength test.</p>
+  <canvas id="nonconformanceChart" height="70"></canvas>
+</div>
+
+<div class="card">
+  <h2>Non-Conformance Log (auto-flagged)</h2>
+  <table class="grid">
+    <thead><tr><th>Module</th><th>Sample ID</th><th>Issue</th><th>Date Flagged</th></tr></thead>
+    <tbody>
+      {% for r in non_conformance_log %}
+      <tr><td>{{ r.sheet }}</td><td>{{ r.sample_id }}</td><td>{{ r.issue }}</td><td>{{ r.date }}</td></tr>
+      {% empty %}
+      <tr><td colspan="4">No non-conformances recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script src="{% static 'qc/js/chart.umd.js' %}"></script>
+<script>
+  const curingData = {{ curing_chart|safe }};
+  const slumpData = {{ slump_chart|safe }};
+  const outcomeData = {{ outcome_pie|safe }};
+  const nonconformanceData = {{ nonconformance_bar|safe }};
+  const colors = ["#1a5f3f","#c0392b","#2980b9","#e67e22","#8e44ad","#16a085"];
+
+  // Figure 6.1 — Slump vs limit (grouped bar)
+  new Chart(document.getElementById('slumpChart'), {
+    type: 'bar',
+    data: {
+      labels: slumpData.labels,
+      datasets: [
+        { label: 'Slump (mm)', data: slumpData.slump, backgroundColor: '#1a5f3f' },
+        { label: 'Acceptance Limit (mm)', data: slumpData.limit, backgroundColor: '#c9ccd1' },
+      ]
+    },
+    options: {
+      scales: {
+        y: { title: { display: true, text: 'mm' } },
+        x: { ticks: { autoSkip: false, maxRotation: 60, minRotation: 45, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Figure 6.2 — Compressive strength development (line)
+  new Chart(document.getElementById('curingChart'), {
+    type: 'line',
+    data: {
+      labels: curingData.ages,
+      datasets: curingData.series.map((s, i) => ({
+        label: s.label, data: s.data, borderColor: colors[i % colors.length],
+        backgroundColor: 'transparent', tension: 0.2
+      }))
+    },
+    options: { scales: { y: { title: { display: true, text: 'N/mm2' } }, x: { title: { display: true, text: 'Curing age (days)' } } } }
+  });
+
+  // Figure 6.3 — Outcome distribution (pie)
+  new Chart(document.getElementById('outcomeChart'), {
+    type: 'pie',
+    data: {
+      labels: outcomeData.labels,
+      datasets: [{ data: outcomeData.data, backgroundColor: ['#1a7d34', '#c0392b', '#8891a5'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Figure 6.4 — Non-conformance comparison (bar)
+  new Chart(document.getElementById('nonconformanceChart'), {
+    type: 'bar',
+    data: {
+      labels: nonconformanceData.labels,
+      datasets: [{ label: 'Non-Conforming Count', data: nonconformanceData.data, backgroundColor: '#c0392b' }]
+    },
+    options: { indexAxis: 'y', scales: { x: { ticks: { stepSize: 1 } } } }
+  });
+</script>
+{% endblock %}

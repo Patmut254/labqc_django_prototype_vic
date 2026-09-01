@@ -1,0 +1,35 @@
+{% extends "qc/base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Sample Registration</h2>
+  <p style="font-size:13px;color:#666;">Every concrete batch is registered here and given a unique ID used across all other modules.</p>
+  <form class="entry-form" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        <label>{{ field.label }}</label>
+        {{ field }}
+      </div>
+    {% endfor %}
+    <div><button type="submit">Register Sample</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="grid">
+    <thead><tr>
+      <th>Sample ID</th><th>Project</th><th>Batch</th><th>Mixer</th><th>Casting Date</th>
+      <th>Grade</th><th>Registered By</th><th>Notes</th>
+    </tr></thead>
+    <tbody>
+      {% for s in samples %}
+      <tr>
+        <td>{{ s.sample_id }}</td><td>{{ s.project_name }}</td><td>{{ s.batch_no }}</td>
+        <td>{{ s.mixer_id }}</td><td>{{ s.casting_date }}</td><td>{{ s.concrete_grade }}</td>
+        <td>{{ s.registered_by.username }}</td><td>{{ s.notes }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "qc/base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Slump Test</h2>
+  <p style="font-size:13px;color:#666;">Fresh-concrete workability results, linked to a registered sample ID.</p>
+  <form class="entry-form" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        <label>{{ field.label }}</label>
+        {{ field }}
+      </div>
+    {% endfor %}
+    <div><button type="submit">Record Result</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="grid">
+    <thead><tr>
+      <th>Sample ID</th><th>Test Date</th><th>Grade</th><th>Slump (mm)</th>
+      <th>Acceptance Limit</th><th>Within Limit?</th><th>Tested By</th><th>Notes</th>
+    </tr></thead>
+    <tbody>
+      {% for t in tests %}
+      <tr>
+        <td>{{ t.sample.sample_id }}</td><td>{{ t.test_date }}</td><td>{{ t.sample.concrete_grade }}</td>
+        <td>{{ t.slump_mm }}</td><td>{{ t.sample.acceptance_limit_mm }}</td>
+        <td class="{% if t.within_limit %}status-ok{% else %}status-bad{% endif %}">{{ t.status_label }}</td>
+        <td>{{ t.tested_by.username }}</td><td>{{ t.notes }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

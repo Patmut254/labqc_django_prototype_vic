@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Lab QC System{% endblock %}</title>
+<style>
+  :root {
+    --grid-line: #e3e5ea;
+    --header-bg: #f3f4f7;
+    --accent: #1a5f3f;
+    --accent-dark: #0e2e20;
+    --accent-light: #e5f2ec;
+    --sidebar-w: 220px;
+    --sidebar-bg: #0f1626;
+    --sidebar-bg-hover: #1b2338;
+    --text-muted: #8891a5;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Calibri, Arial, sans-serif; margin: 0; background: #f4f5f8; color: #1c1e21; }
+  svg.icon { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .app-shell { min-height: 100vh; display: flex; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 40;
+    transition: transform 0.2s ease;
+  }
+  .sidebar .brand {
+    padding: 20px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .sidebar .brand .mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent) 0%, #3a9d6f 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: white;
+  }
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; padding: 10px 10px; flex: 1; overflow-y: auto; }
+  .sidebar nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .sidebar nav a:hover { background: var(--sidebar-bg-hover); color: #dfe3ee; }
+  .sidebar nav a.active { background: var(--accent); color: white; font-weight: 600; }
+  .sidebar nav a.active svg.icon { stroke: white; }
+
+  /* ---------- Content area ---------- */
+  .content-area { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-width: 0; }
+
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--grid-line);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .topbar .spacer { flex: 1; }
+  .menu-toggle {
+    display: none;
+    background: none; border: none; color: #4a5266; cursor: pointer;
+    padding: 4px 6px; border-radius: 6px;
+  }
+  .icon-btn {
+    background: none; border: none; cursor: pointer; color: #6b7280;
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .icon-btn:hover { background: var(--header-bg); color: #1c1e21; }
+  .search-box { width: 0; overflow: hidden; transition: width 0.18s ease; }
+  .search-box.open { width: 220px; }
+  .search-box form { display: flex; }
+  .search-box input {
+    width: 100%; border: 1px solid var(--grid-line); border-radius: 8px;
+    padding: 6px 10px; font-size: 13px; background: var(--header-bg);
+  }
+  .icon-btn .badge {
+    position: absolute; top: 3px; right: 3px;
+    background: #d9463c; color: white; font-size: 9.5px; font-weight: 700;
+    min-width: 14px; height: 14px; border-radius: 8px; padding: 0 3px;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+
+  .user-menu { position: relative; }
+  .user-menu > button {
+    background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    padding: 4px 6px 4px 4px; border-radius: 20px;
+  }
+  .user-menu > button:hover { background: var(--header-bg); }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700; flex-shrink: 0;
+  }
+  .user-menu .name { font-size: 13px; font-weight: 600; color: #1c1e21; }
+  .user-menu .chev { color: #8891a5; }
+  .user-dropdown {
+    display: none;
+    position: absolute; right: 0; top: calc(100% + 8px);
+    background: white; border: 1px solid var(--grid-line); border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(20,25,40,0.14);
+    min-width: 190px; padding: 6px; z-index: 50;
+  }
+  .user-menu.open .user-dropdown { display: block; }
+  .user-dropdown .who { padding: 8px 10px 10px; border-bottom: 1px solid var(--grid-line); margin-bottom: 6px; }
+  .user-dropdown .who .role { font-size: 12px; color: var(--text-muted); }
+  .user-dropdown form { margin: 0; }
+  .user-dropdown .logout-item {
+    width: 100%; display: flex; align-items: center; gap: 9px;
+    background: none; border: none; cursor: pointer; text-align: left;
+    padding: 8px 10px; border-radius: 7px; font-size: 13px; color: #d9463c; font-family: inherit;
+  }
+  .user-dropdown .logout-item:hover { background: #fdecea; }
+
+  main { padding: 22px 24px; max-width: 1180px; width: 100%; margin: 0 auto; }
+
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(10,14,25,0.45); z-index: 30; }
+
+  /* ---------- Shared components ---------- */
+  .card { background: white; border: 1px solid var(--grid-line); border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(20,25,40,0.03); }
+  table.grid { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.grid th { background: var(--header-bg); border-bottom: 1px solid var(--grid-line); padding: 8px 10px; text-align: left; position: sticky; top: 0; font-weight: 600; color: #4a5266; }
+  table.grid td { border-bottom: 1px solid var(--grid-line); padding: 8px 10px; }
+  table.grid tr:last-child td { border-bottom: none; }
+  .status-ok { color: #1a7d34; font-weight: bold; }
+  .status-bad { color: #c0392b; font-weight: bold; }
+  form.entry-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; margin-bottom: 16px; }
+  form.entry-form label { display: block; font-size: 12px; color: #555; margin-bottom: 3px; }
+  form.entry-form input, form.entry-form select { width: 100%; padding: 6px 8px; border: 1px solid var(--grid-line); border-radius: 6px; box-sizing: border-box; }
+  button { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+  button:hover { opacity: 0.9; }
+  .messages { list-style: none; padding: 0; }
+  .messages li { background: var(--accent-light); border: 1px solid #b7dfc2; padding: 8px 12px; border-radius: 7px; margin-bottom: 10px; font-size: 13px; }
+
+  /* KPI cards */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .kpi-card { background: white; border: 1px solid var(--grid-line); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(20,25,40,0.03); }
+  .kpi-card .kpi-label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+  .kpi-card .kpi-value { font-size: 24px; font-weight: 700; color: #1c1e21; margin-bottom: 6px; }
+  .kpi-card .kpi-sub { font-size: 12px; color: var(--text-muted); }
+  .kpi-card .kpi-sub.warn { color: #c0392b; }
+  .kpi-card .kpi-sub.good { color: #1a7d34; }
+
+  .split-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: stretch; }
+
+  /* Bar chart (pure CSS, no JS lib) */
+  .bar-chart { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding: 6px 4px 0; }
+  .bar-chart .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar-chart .bar-col .bar { width: 65%; min-height: 3px; background: var(--accent); border-radius: 5px 5px 2px 2px; }
+  .bar-chart .bar-col .bar-count { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .bar-chart .bar-col .bar-label { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+  /* Ranked list */
+  .rank-list { list-style: none; margin: 0; padding: 0; }
+  .rank-list li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--grid-line); font-size: 13px; }
+  .rank-list li:last-child { border-bottom: none; }
+  .rank-list .rank-badge {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--header-bg); color: #4a5266;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .rank-list li:first-child .rank-badge { background: var(--accent); color: white; }
+  .rank-list .rank-label { flex: 1; color: #1c1e21; }
+  .rank-list .rank-count { font-weight: 600; color: #1c1e21; }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); width: 240px; box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+    .app-shell.sidebar-open .sidebar { transform: translateX(0); }
+    .app-shell.sidebar-open .sidebar-overlay { display: block; }
+    .content-area { margin-left: 0; }
+    .menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    main { padding: 14px; }
+    form.entry-form { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .split-row { grid-template-columns: 1fr; }
+    .user-menu .name { display: none; }
+  }
+  @media (max-width: 480px) {
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+
+  {% if user.is_authenticated %}
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="mark">QC</span> Lab QC System</div>
+    <nav>
+      <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      {% if can_enter_data %}
+      <a href="{% url 'registration' %}" class="{% if request.resolver_match.url_name == 'registration' %}active{% endif %}">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><rect x="5" y="6" width="14" height="15" rx="2"/><path d="M9 13h6M9 17h4"/></svg>
+        Sample Registration
+      </a>
+      <a href="{% url 'slump_test' %}" class="{% if request.resolver_match.url_name == 'slump_test' %}active{% endif %}">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 22h11.6a2 2 0 0 0 1.7-3.5L14 9V3"/><path d="M6.5 15h11"/></svg>
+        Slump Test
+      </a>
+      <a href="{% url 'curing_strength' %}" class="{% if request.resolver_match.url_name == 'curing_strength' %}active{% endif %}">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Curing &amp; Strength
+      </a>
+      {% endif %}
+      {% if can_view_reporting %}
+      <a href="{% url 'reporting' %}" class="{% if request.resolver_match.url_name == 'reporting' %}active{% endif %}">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+        Reporting
+      </a>
+      {% endif %}
+    </nav>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  {% endif %}
+
+  <div class="content-area">
+    <div class="topbar">
+      {% if user.is_authenticated %}
+      <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Toggle menu">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="spacer"></div>
+      <div class="search-box" id="searchBox">
+        <form method="get" action="{% url 'sample_search' %}">
+          <input type="text" name="q" placeholder="Search samples...">
+        </form>
+      </div>
+      <button class="icon-btn" aria-label="Search" type="button" id="searchToggle">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Help" type="button">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.7c0 1.6-2.2 1.8-2.4 3.3M12 17h.01"/></svg>
+      </button>
+      <div class="user-menu" id="notifMenu">
+        <button class="icon-btn" aria-label="Notifications" type="button" id="notifBtn">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          {% if open_nonconformance_count %}<span class="badge">{{ open_nonconformance_count }}</span>{% endif %}
+        </button>
+        <div class="user-dropdown" style="min-width:280px;">
+          <div class="who" style="font-weight:600;">Non-conformances ({{ open_nonconformance_count }})</div>
+          {% for item in notification_items %}
+            <div style="padding:8px 10px;border-bottom:1px solid var(--grid-line);font-size:12.5px;">
+              <div style="font-weight:600;">{{ item.sample_id }}</div>
+              <div style="color:var(--text-muted);">{{ item.text }}</div>
+            </div>
+          {% empty %}
+            <div style="padding:10px;font-size:12.5px;color:var(--text-muted);">Nothing flagged.</div>
+          {% endfor %}
+          {% if can_view_reporting %}
+            <a href="{% url 'reporting' %}" style="display:block;padding:8px 10px;font-size:12.5px;color:var(--accent);text-decoration:none;">View full report →</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="user-menu" id="userMenu">
+        <button type="button" id="userMenuBtn">
+          <span class="avatar">{{ user.username|slice:":2"|upper }}</span>
+          <span class="name">{{ user.get_full_name|default:user.username }}</span>
+          <svg class="icon chev" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="user-dropdown">
+          <div class="who">
+            <div style="font-size:13px;font-weight:600;">{{ user.get_full_name|default:user.username }}</div>
+            <div class="role">{{ user.profile.get_role_display|default:"—" }}</div>
+          </div>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-item">
+              <svg class="icon" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+              Log out
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <main>
+      {% if messages %}<ul class="messages">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{% if user.is_authenticated %}
+<script>
+  (function () {
+    var shell = document.getElementById('appShell');
+    var toggle = document.getElementById('menuToggle');
+    var overlay = document.getElementById('sidebarOverlay');
+    if (toggle) toggle.addEventListener('click', function () { shell.classList.toggle('sidebar-open'); });
+    if (overlay) overlay.addEventListener('click', function () { shell.classList.remove('sidebar-open'); });
+
+    var userMenu = document.getElementById('userMenu');
+    var userMenuBtn = document.getElementById('userMenuBtn');
+    userMenuBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      userMenu.classList.toggle('open');
+    });
+
+    var searchBox = document.getElementById('searchBox');
+    var searchToggle = document.getElementById('searchToggle');
+    searchToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      searchBox.classList.toggle('open');
+      if (searchBox.classList.contains('open')) {
+        searchBox.querySelector('input').focus();
+      }
+    });
+    searchBox.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    var notifMenu = document.getElementById('notifMenu');
+    var notifBtn = document.getElementById('notifBtn');
+    notifBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      notifMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function () {
+      userMenu.classList.remove('open');
+      notifMenu.classList.remove('open');
+      searchBox.classList.remove('open');
+    });
+  })();
+</script>
+{% endif %}
+</body>
+</html>

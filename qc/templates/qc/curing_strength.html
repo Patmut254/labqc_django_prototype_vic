@@ -1,0 +1,43 @@
+{% extends "qc/base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Curing and Strength</h2>
+  <p style="font-size:13px;color:#666;">The 7/14/21/28-day curing cycle. Compressive strength is calculated automatically from load and cross-sectional area.</p>
+  <form class="entry-form" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div>
+        <label>{{ field.label }}</label>
+        {{ field }}
+      </div>
+    {% endfor %}
+    <div><button type="submit">Record Result</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <table class="grid">
+    <thead><tr>
+      <th>Sample ID</th><th>Age (days)</th><th>Test Date</th><th>Load (kN)</th><th>Area (mm2)</th>
+      <th>Compressive Strength (N/mm2)</th><th>28-day Result</th><th>Tested By</th>
+    </tr></thead>
+    <tbody>
+      {% for t in tests %}
+      <tr>
+        <td>{{ t.sample.sample_id }}</td><td>{{ t.curing_age_days }}</td><td>{{ t.test_date }}</td>
+        <td>{{ t.load_kn }}</td><td>{{ t.cross_sectional_area_mm2 }}</td>
+        <td><strong>{{ t.compressive_strength_nmm2 }}</strong></td>
+        <td>
+          {% if t.curing_age_days == 28 %}
+            <span class="{% if t.passed %}status-ok{% else %}status-bad{% endif %}">
+              {% if t.passed %}Pass{% else %}Fail{% endif %}
+            </span>
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ t.tested_by.username }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
