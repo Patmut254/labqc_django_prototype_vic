@@ -17,31 +17,33 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# Falls back to the original dev key locally; set a real DJANGO_SECRET_KEY
-# environment variable in the Vercel project settings for the live demo.
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-tkrw&8g+3qd&3fh7px9rc2$(kd+b2^t##crgg@tyccw69-^y97',
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Set DJANGO_DEBUG=False in the Vercel project's environment variables.
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
 
-# Vercel's preview/production URLs, plus any host supplied via env var
-# (comma-separated), e.g. DJANGO_ALLOWED_HOSTS=labqc.vercel.app
+
+# Vercel hosts
 ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost']
+
 _extra_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS')
 if _extra_hosts:
-    ALLOWED_HOSTS += [h.strip() for h in _extra_hosts.split(',') if h.strip()]
-# Vercel also sets VERCEL_URL to the current deployment's hostname
+    ALLOWED_HOSTS += [
+        h.strip()
+        for h in _extra_hosts.split(',')
+        if h.strip()
+    ]
+
 if os.environ.get('VERCEL_URL'):
     ALLOWED_HOSTS.append(os.environ['VERCEL_URL'])
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if '.' in h]
+
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+]
 
 
 # Application definition
@@ -102,11 +104,29 @@ WSGI_APPLICATION = 'labqc.wsgi.application'
 # (e.g. from Vercel Postgres, Neon, or Supabase) in the Vercel project
 # settings to use a real persistent database instead; falls back to the
 # local SQLite file when DATABASE_URL is not set.
+# if os.environ.get('DATABASE_URL'):
+#     import dj_database_url
+#     DATABASES = {
+#         'default': dj_database_url.config(
+#             env='DATABASE_URL', conn_max_age=600, ssl_require=True
+#         )
+#     }
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': BASE_DIR / 'db.sqlite3',
+#         }
+#     }
+# Database
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
+
     DATABASES = {
         'default': dj_database_url.config(
-            env='DATABASE_URL', conn_max_age=600, ssl_require=True
+            env='DATABASE_URL',
+            conn_max_age=600,
+            ssl_require=True,
         )
     }
 else:
