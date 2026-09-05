@@ -21,6 +21,7 @@ match the dissertation exactly.
 python -m venv .venv
 .venv\Scripts\activate
 pip install django openpyxl
+pip install dj-database-url psycopg[binary]
 python manage.py runserver
 ```
 
