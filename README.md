@@ -70,6 +70,12 @@ If the presentation is just a read-only walkthrough of the existing 20
 samples, the bundled SQLite file is fine to deploy without a separate
 database.
 
+```
+$env:DATABASE_URL="postgresql://neondb_owner:npg_7Hqn2KXtOUjs@ep-dark-band-aeofg1r7-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+python manage.py migrate
+python manage.py seed_from_excel
+```
+
 ## Login accounts
 
 | Username   | Password  | Role                                |
