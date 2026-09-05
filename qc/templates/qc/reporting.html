@@ -85,30 +85,11 @@
 </div>
 
 <script src="{% static 'qc/js/chart.umd.js' %}"></script>
-<!-- <script src="{% static 'qc/js/chart.umd.js' %}"></script> -->
-
-{{ curing_chart|json_script:"curing-chart-data" }}
-{{ slump_chart|json_script:"slump-chart-data" }}
-{{ outcome_pie|json_script:"outcome-chart-data" }}
-{{ nonconformance_bar|json_script:"nonconformance-chart-data" }}
-
 <script>
-  const curingData = JSON.parse(
-    document.getElementById('curing-chart-data').textContent
-  );
-
-  const slumpData = JSON.parse(
-    document.getElementById('slump-chart-data').textContent
-  );
-
-  const outcomeData = JSON.parse(
-    document.getElementById('outcome-chart-data').textContent
-  );
-
-  const nonconformanceData = JSON.parse(
-    document.getElementById('nonconformance-chart-data').textContent
-  );
-
+  const curingData = {{ curing_chart| safe }};
+  const slumpData = {{ slump_chart| safe }};
+  const outcomeData = {{ outcome_pie| safe }};
+  const nonconformanceData = {{ nonconformance_bar| safe }};
   const colors = ["#1a5f3f", "#c0392b", "#2980b9", "#e67e22", "#8e44ad", "#16a085"];
 
   // Figure 6.1 — Slump vs limit (grouped bar)
