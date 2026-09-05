@@ -2,24 +2,44 @@
 {% load static %}
 {% block content %}
 <div class="kpi-row">
-  <div class="kpi-card"><div class="kpi-value">{{ total_samples }}</div><div class="kpi-label">Samples Registered</div></div>
-  <div class="kpi-card"><div class="kpi-value">{{ total_slump }}</div><div class="kpi-label">Slump Tests</div></div>
-  <div class="kpi-card"><div class="kpi-value">{{ slump_nonconforming_count }}</div><div class="kpi-label">Slump Non-Conforming</div></div>
-  <div class="kpi-card"><div class="kpi-value">{{ total_strength }}</div><div class="kpi-label">Strength Tests</div></div>
-  <div class="kpi-card"><div class="kpi-value">{{ strength_passed_count }}</div><div class="kpi-label">28-day Passed</div></div>
-  <div class="kpi-card"><div class="kpi-value">{{ strength_failed_count }}</div><div class="kpi-label">28-day Failed</div></div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ total_samples }}</div>
+    <div class="kpi-label">Samples Registered</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ total_slump }}</div>
+    <div class="kpi-label">Slump Tests</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ slump_nonconforming_count }}</div>
+    <div class="kpi-label">Slump Non-Conforming</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ total_strength }}</div>
+    <div class="kpi-label">Strength Tests</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ strength_passed_count }}</div>
+    <div class="kpi-label">28-day Passed</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value">{{ strength_failed_count }}</div>
+    <div class="kpi-label">28-day Failed</div>
+  </div>
 </div>
 
 <div class="card">
   <h2>Figure 6.1: Recorded Slump Results Against Acceptance Limits</h2>
-  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">All twenty registered samples, actual slump vs. the grade's acceptance limit.</p>
+  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">All twenty registered samples, actual slump vs.
+    the grade's acceptance limit.</p>
   <canvas id="slumpChart" height="90"></canvas>
 </div>
 
 <div class="split-row">
   <div class="card">
     <h2>Figure 6.2: Compressive Strength Development</h2>
-    <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Six samples across the full 7/14/21/28-day curing cycle.</p>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Six samples across the full 7/14/21/28-day
+      curing cycle.</p>
     <canvas id="curingChart" height="140"></canvas>
   </div>
   <div class="card">
@@ -31,31 +51,65 @@
 
 <div class="card">
   <h2>Figure 6.4: Non-Conformance Comparison</h2>
-  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Slump test vs. 28-day compressive strength test.</p>
+  <p style="font-size:12.5px;color:var(--text-muted);margin-top:-8px;">Slump test vs. 28-day compressive strength test.
+  </p>
   <canvas id="nonconformanceChart" height="70"></canvas>
 </div>
 
 <div class="card">
   <h2>Non-Conformance Log (auto-flagged)</h2>
   <table class="grid">
-    <thead><tr><th>Module</th><th>Sample ID</th><th>Issue</th><th>Date Flagged</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>Sample ID</th>
+        <th>Issue</th>
+        <th>Date Flagged</th>
+      </tr>
+    </thead>
     <tbody>
       {% for r in non_conformance_log %}
-      <tr><td>{{ r.sheet }}</td><td>{{ r.sample_id }}</td><td>{{ r.issue }}</td><td>{{ r.date }}</td></tr>
+      <tr>
+        <td>{{ r.sheet }}</td>
+        <td>{{ r.sample_id }}</td>
+        <td>{{ r.issue }}</td>
+        <td>{{ r.date }}</td>
+      </tr>
       {% empty %}
-      <tr><td colspan="4">No non-conformances recorded.</td></tr>
+      <tr>
+        <td colspan="4">No non-conformances recorded.</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
 <script src="{% static 'qc/js/chart.umd.js' %}"></script>
+<!-- <script src="{% static 'qc/js/chart.umd.js' %}"></script> -->
+
+{{ curing_chart|json_script:"curing-chart-data" }}
+{{ slump_chart|json_script:"slump-chart-data" }}
+{{ outcome_pie|json_script:"outcome-chart-data" }}
+{{ nonconformance_bar|json_script:"nonconformance-chart-data" }}
+
 <script>
-  const curingData = {{ curing_chart|safe }};
-  const slumpData = {{ slump_chart|safe }};
-  const outcomeData = {{ outcome_pie|safe }};
-  const nonconformanceData = {{ nonconformance_bar|safe }};
-  const colors = ["#1a5f3f","#c0392b","#2980b9","#e67e22","#8e44ad","#16a085"];
+  const curingData = JSON.parse(
+    document.getElementById('curing-chart-data').textContent
+  );
+
+  const slumpData = JSON.parse(
+    document.getElementById('slump-chart-data').textContent
+  );
+
+  const outcomeData = JSON.parse(
+    document.getElementById('outcome-chart-data').textContent
+  );
+
+  const nonconformanceData = JSON.parse(
+    document.getElementById('nonconformance-chart-data').textContent
+  );
+
+  const colors = ["#1a5f3f", "#c0392b", "#2980b9", "#e67e22", "#8e44ad", "#16a085"];
 
   // Figure 6.1 — Slump vs limit (grouped bar)
   new Chart(document.getElementById('slumpChart'), {
